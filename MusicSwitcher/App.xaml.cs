@@ -48,7 +48,10 @@ namespace MusicSwitcher
 
         public App()
         {
-           // ConsoleHelper.AllocConsole();
+#if DEBUG
+             ConsoleHelper.AllocConsole();
+#endif
+
             var _host = Microsoft.Extensions.Hosting.Host.CreateDefaultBuilder()
                 .UseContentRoot(AppContext.BaseDirectory);
 
@@ -57,7 +60,7 @@ namespace MusicSwitcher
                 services.AddSingleton<MainWindow>();
                 services.AddSingleton<MainViewModel>();
                 services.AddSingleton<MusicModel>();
-                services.AddTransient<IMusicServices, MusicServices>();
+                services.AddSingleton<IMusicServices, MusicServices>();
                 services.AddHostedService<MusicBackgroundServices>();
 
             });

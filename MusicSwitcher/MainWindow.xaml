@@ -24,7 +24,7 @@
         </ResourceDictionary>
        
     </Window.Resources>
-    <Border Background="{Binding MusicModel.WindowColor}" x:Name="Border" CornerRadius="15">
+    <Border  x:Name="Border" CornerRadius="15" Background="{Binding MusicModel.WindowColor}" >
         <Grid>
 
             
