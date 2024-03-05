@@ -26,7 +26,8 @@ namespace MusicSwitcher.WorkerServices
             {
                 try
                 {
-                    await Task.Delay(TimeSpan.FromMinutes(1));
+                    await _musicServices.UpdateMusic();
+                    await Task.Delay(TimeSpan.FromSeconds(1));
                 }
                 catch(Exception e)
                 {
