@@ -18,11 +18,12 @@ namespace MusicSwitcher
     /// </summary>
     public partial class MainWindow : Window
     {
-        public Animation Animation { get; set; }
+        private Animation Animation { get; set; }
         public MainWindow(MainViewModel viewModel)
         {
             var primaryMonitorArea = SystemParameters.WorkArea;
             InitializeComponent();
+            
             Loaded += MainWindow_Loaded;
             Left = primaryMonitorArea.Right - Width - 5;
             Top = primaryMonitorArea.Bottom - Height - 5; 
@@ -32,8 +33,10 @@ namespace MusicSwitcher
         {
 
             Animation = new Animation(this);
-            //Hide();
+            Hide();
         }
+        
+        /// <summary> Установка элементов с треком на начальные позиции после обновления размера </summary>
 
         private void Track_OnSizeChanged(object sender, SizeChangedEventArgs e)
         {

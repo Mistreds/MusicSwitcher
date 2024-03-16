@@ -6,18 +6,27 @@ using System.Text;
 using System.Threading.Tasks;
 using Windows.Media.Control;
 using MusicSwitcher.Model;
+using System.Security.Cryptography;
+using System.Security.Policy;
 
 namespace MusicSwitcher.Services
 {
     public interface IMusicServices
     {
-
+        /// <summary>Включение следующей песни </summary>
         public Task NextButton();
+
+        /// <summary>Включение предыдущей песни </summary>
         public Task BackButton();
+        /// <summary> Старт или остановка песни </summary>
         public Task StartStop();
+        /// <summary>Обновление модели</summary>
         public Task UpdateMusic();
     }
 
+    /// <summary>
+    /// Сервис по переключению музыки
+    /// </summary>
     public class MusicServices : IMusicServices
     {
         private GlobalSystemMediaTransportControlsSessionManager gsmtcsm;
@@ -93,7 +102,6 @@ namespace MusicSwitcher.Services
                     await _musicModel.SetDefault();
                     return;
                 }
-
                 mediaProperties = await GetMediaProperties(gsmtcsm.GetCurrentSession());
                 var currSession = gsmtcsm.GetCurrentSession();
                 var playBack = currSession.GetPlaybackInfo();
@@ -101,32 +109,36 @@ namespace MusicSwitcher.Services
                     _musicModel.SingName == mediaProperties.Title &&
                     _musicModel.Status == playBack.PlaybackStatus.ToString())
                 {
-                    return;
+
+                }
+                else
+                {
+                    await _musicModel.UpdateMusic(mediaProperties.Title, mediaProperties.AlbumTitle, mediaProperties.Artist,
+                        playBack.PlaybackStatus.ToString());
                 }
                 var stream = await mediaProperties.Thumbnail.OpenReadAsync();
-                var bytes = default(byte[]);
-                using (StreamReader sr = new StreamReader(stream.AsStreamForRead()))
-                {
-                    using (var memstream = new MemoryStream())
-                    {
-                        var buffer = new byte[512];
-                        var bytesRead = default(int);
-                        while ((bytesRead = sr.BaseStream.Read(buffer, 0, buffer.Length)) > 0)
-                            memstream.Write(buffer, 0, bytesRead);
-                        bytes = memstream.ToArray();
-                    }
-                }
-                await _musicModel.UpdateMusic(mediaProperties.Title, mediaProperties.AlbumTitle, mediaProperties.Artist,
-                    playBack.PlaybackStatus.ToString(), bytes);
+                using var md5 = MD5.Create();
+                using StreamReader sr = new StreamReader(stream.AsStreamForRead());
+                using var memstream = new MemoryStream();
+                var buffer = new byte[512];
+                var bytesRead = default(int);
+                
+                while ((bytesRead = sr.BaseStream.Read(buffer, 0, buffer.Length)) > 0)
+                    memstream.Write(buffer, 0, bytesRead);
+                var bytes = memstream.ToArray();
+                var hash = string.Join("", md5.ComputeHash(bytes));
+                if (_musicModel.HashImage != hash)
+                    await _musicModel.UpdatePicture(bytes);
+                
+                GC.Collect();
             }
             catch (Exception e)
             {
                 Console.WriteLine(e);
-                throw;
             }
            
         }
-    
+
 
         private async void GetGSMT() => gsmtcsm = await GetSystemMediaTransportControlsSessionManager();
         private async Task<GlobalSystemMediaTransportControlsSessionManager> GetSystemMediaTransportControlsSessionManager() =>

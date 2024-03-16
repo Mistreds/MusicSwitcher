@@ -13,6 +13,7 @@ using static System.Net.Mime.MediaTypeNames;
 using Color = System.Windows.Media.Color;
 using System.Drawing.Imaging;
 using static System.Windows.Forms.VisualStyles.VisualStyleElement;
+using System.Security.Cryptography;
 
 namespace MusicSwitcher.Model;
 
@@ -34,6 +35,7 @@ public class MusicModel:ReactiveObject
 
     [Reactive] public BitmapImage AlbumImage { get; set; }
     [Reactive] public Brush WindowColor { get; set; } = (SolidColorBrush)new BrushConverter().ConvertFrom("#6634384B")!;
+    public string HashImage { get; set; } = string.Empty;
     private static readonly BrushConverter Converter = new ();
 
     public async Task SetDefault()
@@ -56,7 +58,7 @@ public class MusicModel:ReactiveObject
 
         });
     }
-    public async Task UpdateMusic(string singName, string albumName, string singerName, string status, byte[] file)
+    public async Task UpdateMusic(string singName, string albumName, string singerName, string status)
     {
         await Task.Run(async () =>
         {
@@ -67,8 +69,7 @@ public class MusicModel:ReactiveObject
             this.Status = status;
             await App.Current.Dispatcher.Invoke(async delegate
             {
-                this.AlbumImage = ConvertImage.ToBitmapImage(file);
-                WindowColor= await ConvertImage.GetColor(AlbumImage);
+              
                 if (status == "Paused")
                 {
                     Icon = play;
@@ -85,6 +86,13 @@ public class MusicModel:ReactiveObject
         });
     }
 
+    public async Task UpdatePicture(byte[] file)
+    {
+        using var md5 = MD5.Create();
+        HashImage = string.Join("", md5.ComputeHash(file));
+        this.AlbumImage = ConvertImage.ToBitmapImage(file);
+        WindowColor = await ConvertImage.GetColor(AlbumImage);
+    }
     private BitmapImage play = new BitmapImage(new Uri("pack://application:,,,/MusicSwitcher;component/Resources/play-button.ico"));
 
     private BitmapImage pause = new BitmapImage(new Uri("pack://application:,,,/MusicSwitcher;component/Resources/video-pause-button.ico"));

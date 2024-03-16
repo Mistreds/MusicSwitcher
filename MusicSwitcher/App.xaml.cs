@@ -16,7 +16,7 @@ namespace MusicSwitcher
     /// </summary>
     public partial class App : Application
     {
-        public IHost Host { get; private set; }
+        private IHost Host { get; set; }
 
         public static T GetService<T>()
             where T : class
@@ -52,19 +52,19 @@ namespace MusicSwitcher
              ConsoleHelper.AllocConsole();
 #endif
 
-            var _host = Microsoft.Extensions.Hosting.Host.CreateDefaultBuilder()
+            var host = Microsoft.Extensions.Hosting.Host.CreateDefaultBuilder()
                 .UseContentRoot(AppContext.BaseDirectory);
 
-            _host.ConfigureServices((context, services) =>
+            host.ConfigureServices((context, services) =>
             {
                 services.AddSingleton<MainWindow>();
                 services.AddSingleton<MainViewModel>();
                 services.AddSingleton<MusicModel>();
-                services.AddSingleton<IMusicServices, MusicServices>();
+                services.AddTransient<IMusicServices, MusicServices>();
                 services.AddHostedService<MusicBackgroundServices>();
 
             });
-            Host = _host.Build();
+            Host = host.Build();
             
         }
 
